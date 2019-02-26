@@ -104,9 +104,20 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
     if (write(fd, buffer12, 12) < 0)
         return 1;
     
+    if (write(fd, "0000000", 8) < 0)
+        return 1;
     
-    
-    
+    if (S_ISREG(buf->st_mode)) {
+        if (write(fd, "0", 1) < 0)
+            return 1;
+    } else if (S_ISDIR(buf->st_mode)) {
+        if (write(fd, "5", 1) < 0)
+            return 1;
+    } else if (S_ISLNK(buf->st_mode)) {
+        if (write(fd, "2", 1) < 0)
+            return 1;
+    }
+        
     return 0;
 }
 

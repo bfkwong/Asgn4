@@ -37,7 +37,7 @@ static int insert_special_int(char *where, size_t size, int32_t val) {
      * otherwise
      */
     int err=0;
-    
+
     if ( val < 2097151 )
         sprintf(where, "%07o", val);
     else {
@@ -54,6 +54,6 @@ static int insert_special_int(char *where, size_t size, int32_t val) {
             *where |= 0x80;             /* set that high-order bit */
         }
     }
-    
+
     return err;
 }

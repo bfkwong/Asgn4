@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include "cOptions.c"
 
 #define C_INDEX 0
 #define T_INDEX 1
@@ -14,10 +15,6 @@
 #define F_INDEX 5
 
 void triggerError(const char *arg, char myErrorCode);
-int cTarfile(int fd, int argc, char *argv[]);
-int cTarDirHelper(int fd, char *path);
-int cWriteFile(int fd, char *path, struct stat *buf);
-
 
 int main(int argc, char *argv[]) {
 
@@ -47,95 +44,16 @@ int main(int argc, char *argv[]) {
         triggerError(argv[0], 'T');
     if (argc < 3 || unrecogChar == 1)
         triggerError(argv[0], 'U');
-    if ((tarFileFD = open(argv[2], O_RDWR|O_CREAT, 0644)) < 0)
+    
+    if ((tarFileFD = open(argv[2], O_RDWR|O_CREAT|O_TRUNC, 0644)) < 0)
         triggerError("", 'S');
 
     if (options[C_INDEX] == 1)
-        if (cTarfile(tarFileFD, argc, argv) == 1)
+        if (cTarfile(tarFileFD, argc, argv, options[V_INDEX]) == 1)
             triggerError("", 'S');
 
 
     return 0; 
-}
-
-int cTarfile(int fd, int argc, char *argv[]) {
-    struct stat buf;
-    int i;
-    
-    for(i=3; i<argc; i++) {
-        if(lstat(argv[i], &buf) < 0)
-            return 1;
-        if(S_ISREG(buf.st_mode)) {
-            if (cWriteFile(fd, argv[i], &buf))
-                return 1;
-        } else if (S_ISDIR(buf.st_mode)) {
-            if (cWriteFile(fd, argv[i], &buf))
-                return 1;
-            if (cTarDirHelper(fd, argv[i]))
-                return 1;
-        }
-    }
-    
-    return 0;
-}
-
-int cTarDirHelper(int fd, char *path) {
-    DIR * dp;
-    struct dirent *dirFile;
-    struct stat buf;
-    char *tempPath;
-    
-    if ((tempPath = (char *)calloc(strlen(path), sizeof(char))) < 0)
-        return 1;
-    if ((dp = opendir(path)) == NULL)
-        return 1;
-    while((dirFile = readdir(dp)) != NULL) {
-        strcpy(tempPath, path);
-        strcat(tempPath, "/");
-        strcat(tempPath, dirFile->d_name);
-        
-        if(lstat(tempPath, &buf) < 0)
-            return 1;
-        if(S_ISREG(buf.st_mode)) {
-            if (cWriteFile(fd, tempPath, &buf))
-                return 1;
-        } else if (S_ISDIR(buf.st_mode)) {
-            if (strcmp(dirFile->d_name, ".") != 0 && strcmp(dirFile->d_name, "..") != 0) {
-                if (cWriteFile(fd, tempPath, &buf))
-                    return 1;
-                if (cTarDirHelper(fd, tempPath))
-                    return 1;
-            }
-        }
-    }
-    
-    closedir(dp);
-    free(tempPath);
-    return 0;
-}
-
-int cWriteFile(int fd, char *path, struct stat *buf) {
-    char pathBuff[100] = "\0";
-    char tempMode[8], finalMode[8];
-    int i;
-
-    strcpy(pathBuff, path);
-    if (S_ISDIR(buf->st_mode))
-        strcat(pathBuff, "/");
-    if (write(fd, pathBuff, 100) < 0)
-        return 1;
-    
-    for (i = 0; i<9; i++) {
-        tempMode[i] = 0;
-        finalMode[i] = 0;
-    }
-    sprintf(tempMode, "%o", buf->st_mode);
-    strcpy(finalMode, "000");
-    strcat(finalMode, tempMode + (strlen(tempMode) - 4));
-    if (write(fd, finalMode, 8) < 0)
-        return 1;
-    
-    return 0;
 }
 
 void triggerError(const char *arg, char myErrorCode) {

@@ -72,7 +72,7 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
     
     char buffer100[100] = "\0";
     char buffer8[8] = "\0";
-    char buffer512[512] = "\0";
+    char buffer12[12] = "\0";
     
     strcpy(buffer100, path);
     if (S_ISDIR(buf->st_mode))
@@ -83,7 +83,7 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
     if (vbose)
         printf("%s\n",buffer100);
     
-    snprintf(buffer8, 8, "%7o", getPermissionFromMode(buf->st_mode));
+    snprintf(buffer8, 8, "%07o", getPermissionFromMode(buf->st_mode));
     if (write(fd, buffer8, 8) < 0)
         return 1;
     
@@ -95,6 +95,17 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
     if (write(fd, buffer8, 8) < 0)
         return 1;
     
+    (S_ISREG(buf->st_mode))?snprintf(buffer12, 12, "%011o", (int)buf->st_size):
+        snprintf(buffer12, 12, "00000000000");
+    if (write(fd, buffer12, 12) < 0)
+        return 1;
+    
+    snprintf(buffer12, 12, "%011o", (int)buf->st_mtim.tv_sec);
+    if (write(fd, buffer12, 12) < 0)
+        return 1;
+    
+    
+    
     
     return 0;
 }
@@ -104,3 +115,4 @@ int getPermissionFromMode(int mode) {
             (mode&S_IRGRP)|(mode&S_IWGRP)|(mode&S_IXGRP)|
             (mode&S_IROTH)|(mode&S_IWOTH)|(mode&S_IXOTH);
 }
+

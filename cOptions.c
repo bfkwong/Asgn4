@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 #include "special.c"
 
 struct Header {
@@ -91,6 +94,9 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
     // char buffer100[100] = "\0";
     // char buffer8[8] = "\0";
     struct Header *hContent;
+    struct passwd *pw;
+    struct group *gp;
+    int i, chksumCount;
 
     hContent = (struct Header *)calloc(1, sizeof(struct Header));
 
@@ -151,7 +157,18 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
 
     strncpy(hContent->magic, "ustar", 6);
     strncpy(hContent->version, "00", 2);
-    
+
+    pw = getpwuid(buf->st_uid);
+    strncpy(hContent->uname, pw->pw_name, 31);
+    hContent->uname[31] = 0;
+
+    gp = getgrgid(buf->st_gid);
+    strncpy(hContent->gname, gp->gr_name, 31);
+    hContent->uname[31] = 0;
+
+    snprintf(hContent->devmajor, 8, "0000000");
+    snprintf(hContent->devminor, 8, "0000000");
+    snprintf(hContent->chksum, 8, "       ");
 
 
     return 0;

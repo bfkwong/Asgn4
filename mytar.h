@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <pwd.h>
 #include <grp.h>
+#include <time.h>
 
 #define C_INDEX 0
 #define T_INDEX 1
@@ -50,3 +51,6 @@ int insert_special_int(char *where, size_t size, int32_t val);
 
 int tTarfile(int argc, char *argv[]);
 struct Header *processHeader(char *buf);  
+int getPermissions(char *permStr, char *type, char *buf);
+
+int xTarfile(int argc, char *argv[])

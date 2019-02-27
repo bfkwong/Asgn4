@@ -30,15 +30,18 @@ int main(int argc, char *argv[]) {
     if (argc < 3 || unrecogChar == 1)
         triggerError(argv[0], 'U');
 
-    if (options[C_INDEX] == 1)
-	if ((tarFileFD = open(argv[2], O_RDWR|O_CREAT|O_TRUNC, 0644)) < 0)
-            triggerError("", 'S');
+    if (options[C_INDEX] == 1) {
+        if ((tarFileFD = open(argv[2], O_RDWR|O_CREAT|O_TRUNC, 0644)) < 0)
+                triggerError("", 'S');
         if (cTarfile(tarFileFD, argc, argv) < 0)
             printf("mytar: error\n");
-    if (options[T_INDEX] == 1)
-	if (tTarfile(argc, argv) < 0)
-            printf("mytar: error\n");
-
+    } else if (options[T_INDEX] == 1) {
+        if (tTarfile(argc, argv) < 0)
+                printf("mytar: error\n");
+    } else if (options[X_INDEX] == 1) {
+        if (xTarfile(argc, argv) < 0)
+                printf("mytar: error\n");
+    }
 
     return 0; 
 }

@@ -1,43 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <grp.h>
-#include "special.c"
-
-struct Header {
-    char name[100];
-    char mode[8];
-    char uid[8];
-    char gid[8];
-    char size[12];
-    char mtime[12];
-    char chksum[8];
-    char typeflag[1];
-    char linkname[100];
-    char magic[6];
-    char version[2];
-    char uname[32];
-    char gname[32];
-    char devmajor[8];
-    char devminor[8];
-    char prefix[155];
-    char empty12[12];
-};
+#include "mytar.h"
 
 extern char options[6];
-
-int cTarfile(int fd, int argc, char *argv[]);
-int cTarDirHelper(int fd, char *path);
-int cWriteFile(int fd, char *path, struct stat *buf);
-int writeHeader(int fd, struct Header *hContent);
-int getPermissionFromMode(int mode);
-void writeChksum(struct Header **h);
 
 int cTarfile(int fd, int argc, char *argv[]) {
     struct stat buf;
@@ -63,7 +26,7 @@ int cTarfile(int fd, int argc, char *argv[]) {
     if(write(fd, twoEmpty512Block, 1024) < 0)
         return -1;
 
-    
+    free(twoEmpty512Block);
     return 0;
 }
 
@@ -123,7 +86,7 @@ int cWriteFile(int fd, char *path, struct stat *buf) {
             fprintf(stderr, "Path name longer than 255");
             return -1;
         }
-        if (options[3])
+        if (options[V_INDEX])
             printf("%s%s\n", hContent->name, hContent->prefix);
     } else {
         printf("Error: Unsupported File Type");
@@ -131,12 +94,14 @@ int cWriteFile(int fd, char *path, struct stat *buf) {
     }
 
     snprintf(hContent->mode, 8, "%07o", getPermissionFromMode(buf->st_mode));
-    if (insert_special_int(hContent->uid, sizeof(hContent->uid), buf->st_uid) < 0) {
+    if (insert_special_int(hContent->uid,
+                           sizeof(hContent->uid), buf->st_uid) < 0) {
         fprintf(stderr, "uid octal value too long. (%o)\n%s: Unable"
                 " to create conforming header\n", buf->st_uid, path);
         return 0;
     }
-    if (insert_special_int(hContent->gid, sizeof(hContent->gid), buf->st_gid) < 0) {
+    if (insert_special_int(hContent->gid,
+                           sizeof(hContent->gid), buf->st_gid) < 0) {
         fprintf(stderr, "uid octal value too long. (%o)\n%s: Unable"
                 " to create conforming header\n", buf->st_gid, path);
         return 0;
@@ -173,13 +138,16 @@ int cWriteFile(int fd, char *path, struct stat *buf) {
     writeHeader(fd, hContent);
     
     if (S_ISREG(buf->st_mode)) {
-        if((fileFd = open(path, O_RDONLY, 0644)) < 0)
+        memset(bufferBlck, 0, 512);
+        if((fileFd = open(path, O_RDONLY)) < 0)
             return -1;
-        while(read(fileFd, bufferBlck, 512) > 0) {
+        while(read(fileFd, bufferBlck, 512) != 0) {
             if (write(fd, bufferBlck, 512) < 0)
                 return -1;
+            memset(bufferBlck, 0, 512);
         }
     }
+    close(fileFd);
     return 0;
     
 }

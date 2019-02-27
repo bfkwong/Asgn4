@@ -1,34 +1,19 @@
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
+#include "mytar.h"
 
-//static uint32_t extract_special_int(char *where, int len);
-static int insert_special_int(char *where, size_t size, int32_t val);
+/*static uint32_t extract_special_int(char *where, int len);*/
 
-//static uint32_t extract_special_int(char *where, int len) {
-//  /* For interoperability with GNU tar.  GNU seems to
-//   * set the high-order bit of the first byte, then
-//   * treat the rest of the field as a binary integer
-//   * in network byte order.
-//   * I don't know for sure if it's a 32 or 64-bit int, but for
-//   * this version, we'll only support 32. (well, 31)
-//   * returns the integer on success, -1 on failure.
-//   * In spite of the name of htonl(), it converts int32_t
-//   */
-//  int32_t val= -1;
-//  if ( (len >= sizeof(val)) && (where[0] & 0x80)) {
-//    /* the top bit is set and we have space
-//     * extract the last four bytes */
-//    val = *(int32_t *)(where+len-sizeof(val));
-//    val = ntohl(val);           /* convert to host byte order */
-//  }
-//  return val;
-//}
+/*static uint32_t extract_special_int(char *where, int len) {
 
-static int insert_special_int(char *where, size_t size, int32_t val) {
+  int32_t val= -1;
+  if ( (len >= sizeof(val)) && (where[0] & 0x80)) {
+
+    val = *(int32_t *)(where+len-sizeof(val));
+    val = ntohl(val);
+  }
+  return val;
+}*/
+
+int insert_special_int(char *where, size_t size, int32_t val) {
     /* For interoperability with GNU tar.  GNU seems to
      * set the high-order bit of the first byte, then
      * treat the rest of the field as a binary integer
@@ -40,7 +25,7 @@ static int insert_special_int(char *where, size_t size, int32_t val) {
     int err=0;
     extern char options[6];
     
-    if (val > 2097151 && options[4] == 1) {
+    if (val > 2097151 && options[S_INDEX] == 1) {
         return -1;
     }
 

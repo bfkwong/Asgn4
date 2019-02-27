@@ -1,22 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <unistd.h>
-#include "cOptions.c"
-
-#define C_INDEX 0
-#define T_INDEX 1
-#define X_INDEX 2
-#define V_INDEX 3
-#define S_INDEX 4
-#define F_INDEX 5
+#include "mytar.h"
 
 char options[6] = "\0\0\0\0\0\0";
-
-void triggerError(const char *arg, char myErrorCode);
 
 int main(int argc, char *argv[]) {
 

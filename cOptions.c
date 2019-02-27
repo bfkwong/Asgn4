@@ -131,10 +131,16 @@ int cWriteFile(int fd, char *path, struct stat *buf) {
     }
 
     snprintf(hContent->mode, 8, "%07o", getPermissionFromMode(buf->st_mode));
-    if (insert_special_int(hContent->uid, sizeof(hContent->uid), buf->st_uid) < 0)
-        return -1;
-    if (insert_special_int(hContent->gid, sizeof(hContent->gid), buf->st_gid) < 0)
-        return -1; 
+    if (insert_special_int(hContent->uid, sizeof(hContent->uid), buf->st_uid) < 0) {
+        fprintf(stderr, "uid octal value too long. (%o)\n%s: Unable"
+                " to create conforming header\n", buf->st_uid, path);
+        return 0;
+    }
+    if (insert_special_int(hContent->gid, sizeof(hContent->gid), buf->st_gid) < 0) {
+        fprintf(stderr, "uid octal value too long. (%o)\n%s: Unable"
+                " to create conforming header\n", buf->st_gid, path);
+        return 0;
+    }
     
     (S_ISREG(buf->st_mode))?
         snprintf(hContent->size, 12, "%011o", (int)buf->st_size):

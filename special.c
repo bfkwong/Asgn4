@@ -41,7 +41,6 @@ static int insert_special_int(char *where, size_t size, int32_t val) {
     extern char options[6];
     
     if (val > 2097151 && options[4] == 1) {
-        fprintf(stderr, "uid or gid too long for S mode\n");
         return -1;
     }
 

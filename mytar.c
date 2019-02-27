@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 
     if (options[C_INDEX] == 1)
         if (cTarfile(tarFileFD, argc, argv) < 0)
-            printf("mytar: Failure\n");
+            printf("mytar: error\n");
 
 
     return 0; 

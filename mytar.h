@@ -11,6 +11,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <errno.h>
 
 #define C_INDEX 0
 #define T_INDEX 1
@@ -54,3 +55,6 @@ struct Header *processHeader(char *buf);
 int getPermissions(char *permStr, char *type, char *buf);
 
 int xTarfile(int argc, char *argv[]);
+int writeEmptyDir(char *pathName, int permissions);
+int writeEmptyFile(struct Header *h);
+int writeInfoToFile(char *buffer, int fd);

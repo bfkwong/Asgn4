@@ -54,6 +54,7 @@ int tTarfile(int argc, char *argv[]) {
                 else if (numBlocks/512.0 > 0)
                     numBlocks = numBlocks/512 + 1;
                 
+                /* Could use lseek to be more efficient */
                 for(i=0; i<numBlocks; i++) {
                     if(read(fd, buffer, 512) < 0)
                         return -1;

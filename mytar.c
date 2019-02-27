@@ -14,12 +14,13 @@
 #define S_INDEX 4
 #define F_INDEX 5
 
+char options[6] = "\0\0\0\0\0\0";
+
 void triggerError(const char *arg, char myErrorCode);
 
 int main(int argc, char *argv[]) {
 
     int i, unrecogChar, tarFileFD;
-    char options[6] = "\0\0\0\0\0\0";
     
     if (argc == 1)
         triggerError(argv[0], 'N');
@@ -49,8 +50,8 @@ int main(int argc, char *argv[]) {
         triggerError("", 'S');
 
     if (options[C_INDEX] == 1)
-        if (cTarfile(tarFileFD, argc, argv, options[V_INDEX]) == 1)
-            triggerError("", 'S');
+        if (cTarfile(tarFileFD, argc, argv) < 0)
+            printf("mytar: Failure\n");
 
 
     return 0; 

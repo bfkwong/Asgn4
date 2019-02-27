@@ -30,14 +30,16 @@ struct Header {
     char empty12[12];
 };
 
-int cTarfile(int fd, int argc, char *argv[], char vbose);
-int cTarDirHelper(int fd, char *path, char vbose);
-int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type);
+extern char options[6];
+
+int cTarfile(int fd, int argc, char *argv[]);
+int cTarDirHelper(int fd, char *path);
+int cWriteFile(int fd, char *path, struct stat *buf);
 int writeHeader(int fd, struct Header *hContent);
 int getPermissionFromMode(int mode);
 void writeChksum(struct Header **h);
 
-int cTarfile(int fd, int argc, char *argv[], char vbose) {
+int cTarfile(int fd, int argc, char *argv[]) {
     struct stat buf;
     char *twoEmpty512Block;
     int i;
@@ -48,12 +50,12 @@ int cTarfile(int fd, int argc, char *argv[], char vbose) {
         if(lstat(argv[i], &buf) < 0)
             return -1;
         if(S_ISREG(buf.st_mode) || S_ISLNK(buf.st_mode)) {
-            if (cWriteFile(fd, argv[i], &buf, vbose, 'r'))
+            if (cWriteFile(fd, argv[i], &buf))
                 return -1;
         } else if (S_ISDIR(buf.st_mode)) {
-            if (cWriteFile(fd, argv[i], &buf, vbose, 'd'))
+            if (cWriteFile(fd, argv[i], &buf))
                 return -1;
-            if (cTarDirHelper(fd, argv[i], vbose))
+            if (cTarDirHelper(fd, argv[i]))
                 return -1;
         }
     }
@@ -65,13 +67,13 @@ int cTarfile(int fd, int argc, char *argv[], char vbose) {
     return 0;
 }
 
-int cTarDirHelper(int fd, char *path, char vbose) {
+int cTarDirHelper(int fd, char *path) {
     DIR * dp;
     struct dirent *dirFile;
     struct stat buf;
     char *tempPath;
 
-    if ((tempPath = (char *)calloc(strlen(path), sizeof(char))) < 0)
+    if (!(tempPath = (char *)calloc(strlen(path), sizeof(char))))
         return -1;
     if ((dp = opendir(path)) == NULL)
         return -1;
@@ -83,13 +85,13 @@ int cTarDirHelper(int fd, char *path, char vbose) {
         if(lstat(tempPath, &buf) < 0)
             return -1;
         if(S_ISREG(buf.st_mode)) {
-            if (cWriteFile(fd, tempPath, &buf, vbose, 'r'))
+            if (cWriteFile(fd, tempPath, &buf))
                 return -1;
         } else if (S_ISDIR(buf.st_mode)) {
             if (strcmp(dirFile->d_name, ".") && strcmp(dirFile->d_name, "..")) {
-                if (cWriteFile(fd, tempPath, &buf, vbose, 'd'))
+                if (cWriteFile(fd, tempPath, &buf))
                     return -1;
-                if (cTarDirHelper(fd, tempPath, vbose))
+                if (cTarDirHelper(fd, tempPath))
                     return -1;
             }
         }
@@ -100,7 +102,7 @@ int cTarDirHelper(int fd, char *path, char vbose) {
     return 0;
 }
 
-int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
+int cWriteFile(int fd, char *path, struct stat *buf) {
 
     struct Header *hContent;
     struct passwd *pw;
@@ -121,7 +123,7 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
             fprintf(stderr, "Path name longer than 255");
             return -1;
         }
-        if (vbose)
+        if (options[3])
             printf("%s%s\n", hContent->name, hContent->prefix);
     } else {
         printf("Error: Unsupported File Type");
@@ -129,8 +131,10 @@ int cWriteFile(int fd, char *path, struct stat *buf, char vbose, char type) {
     }
 
     snprintf(hContent->mode, 8, "%07o", getPermissionFromMode(buf->st_mode));
-    insert_special_int(hContent->uid, sizeof(hContent->uid), buf->st_uid);
-    insert_special_int(hContent->gid, sizeof(hContent->gid), buf->st_gid);
+    if (insert_special_int(hContent->uid, sizeof(hContent->uid), buf->st_uid) < 0)
+        return -1;
+    if (insert_special_int(hContent->gid, sizeof(hContent->gid), buf->st_gid) < 0)
+        return -1; 
     
     (S_ISREG(buf->st_mode))?
         snprintf(hContent->size, 12, "%011o", (int)buf->st_size):

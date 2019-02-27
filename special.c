@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
 
@@ -37,10 +38,16 @@ static int insert_special_int(char *where, size_t size, int32_t val) {
      * otherwise
      */
     int err=0;
+    extern char options[6];
+    
+    if (val > 2097151 && options[4] == 1) {
+        fprintf(stderr, "uid or gid too long for S mode\n");
+        return -1;
+    }
 
-    if ( val < 2097151 )
+    if ( val < 2097151 || options[4] == 1) {
         sprintf(where, "%07o", val);
-    else {
+    } else {
         if ( val < 0 || ( size < sizeof(val))  ) {
             /* if it's negative, bit 31 is set and we can't use the flag
              * if len is too small, we can't write it.  Either way, we're
@@ -50,7 +57,7 @@ static int insert_special_int(char *where, size_t size, int32_t val) {
         } else {
             /* game on....*/
             memset(where, 0, size);     /*   Clear out the buffer  */
-            *(int32_t *)(where+size-sizeof(val)) = htonl(val); 
+            *(int32_t *)(where+size-sizeof(val)) = htonl(val);
             *where |= 0x80;             /* set that high-order bit */
         }
     }

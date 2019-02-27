@@ -53,4 +53,4 @@ int tTarfile(int argc, char *argv[]);
 struct Header *processHeader(char *buf);  
 int getPermissions(char *permStr, char *type, char *buf);
 
-int xTarfile(int argc, char *argv[])
+int xTarfile(int argc, char *argv[]);

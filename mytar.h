@@ -48,3 +48,5 @@ void writeChksum(struct Header **h);
 void triggerError(const char *arg, char myErrorCode);
 int insert_special_int(char *where, size_t size, int32_t val);
 
+int tTarfile(int argc, char *argv[]);
+struct Header *processHeader(char *buf);  

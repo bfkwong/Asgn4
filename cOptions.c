@@ -129,6 +129,9 @@ int cWriteFile(int fd, char *path, struct stat *buf) {
     strncpy(hContent->uname, pw->pw_name, 31);
     hContent->uname[31] = 0;
 
+    if (S_ISLNK(buf->st_mode))
+        readlink(path, hContent->linkname, 100);
+    
     gp = getgrgid(buf->st_gid);
     strncpy(hContent->gname, gp->gr_name, 31);
     hContent->uname[31] = 0;
